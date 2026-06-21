@@ -7,20 +7,34 @@
     <Nullable>enable</Nullable>
     <PackageId>LSQSolver</PackageId>
     <Version>1.0.0</Version>
-    <Authors>nakanotaiga</Authors>
-    <Company>nakanotaiga</Company>
-    <Description>Fast and robust least-squares solver using column-pivoted QR decomposition for full-rank and rank-deficient problems.</Description>
+    <Authors>TaigaNakano</Authors>
+    <Company></Company>
+    <Description>A lightweight dense least-squares solver for .NET.</Description>
     <PackageTags>linear algebra;least squares;QR decomposition;numerical analysis;matrix</PackageTags>
-    <RepositoryUrl>https://github.com/your-org/LSQSolver</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/your-org/LSQSolver</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/TaigaNakano/LSQSolver</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/TaigaNakano/LSQSolver</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
+    <Copyright>Copyright (c) 2026 TaigaNakano</Copyright>
+    <PackageReadmeFile>Readme.md</PackageReadmeFile>
+    <PackageIcon>Project_icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Program.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Assets\Project_icon.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\Readme.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
  
