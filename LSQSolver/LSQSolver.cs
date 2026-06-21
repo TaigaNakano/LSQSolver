@@ -25,6 +25,13 @@ namespace LSQSolver
         /// <param name="store_intermediates">
         /// If true, stores QR intermediates useful for follow-up computations: R, Q^T b, and pivot.
         /// </param>
+        /// <param name="rank_tolerance">
+        /// Relative tolerance used to detect numerical rank deficiency.
+        /// The effective cutoff is rank_tolerance * max(rows, cols) * init_max_norm_of_cols.
+        /// </param>
+        /// <param name="check_finite">
+        /// If true, verifies that A and b contain only finite values.
+        /// </param>
         /// <returns>The computed least squares result. Check Status before using Solution.</returns>
         public static LSQSolverResult Solve(MatrixObject A, double[] b, bool overwrite = true, bool store_intermediates = false, double rank_tolerance =  EPS, bool check_finite = true)
         {
@@ -169,12 +176,14 @@ namespace LSQSolver
 
 #region  QR private kernels
         /// <summary>
-        /// GEQP3-ish norms
+        /// Computes the Euclidean norm for each pivoted column of the matrix.
         /// </summary>
-        /// <param name="A"></param>
-        /// <param name="ipiv"></param>
-        /// <param name="vn1"></param>
-        /// <param name="vn2"></param>
+        /// <param name="valarr">Dense matrix data in column-major order.</param>
+        /// <param name="rows">Number of rows in the matrix.</param>
+        /// <param name="cols">Number of columns in the matrix.</param>
+        /// <param name="ipiv">Current column pivot permutation.</param>
+        /// <param name="vn1">Working column norms used for pivot selection.</param>
+        /// <param name="vn2">Stable column norm estimates used for norm recomputation.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void InitializeColumnNorms(double[] valarr, int rows, int cols,  int[] ipiv, double[] vn1, double[] vn2)
         {
@@ -213,14 +222,14 @@ namespace LSQSolver
         } 
 
         /// <summary>
-        /// Find pivot column and check rank deficient
+        /// Selects the pivot column with the largest remaining norm and checks rank deficiency.
         /// </summary>
-        /// <param name="ipiv"></param>
-        /// <param name="vn1"></param>
-        /// <param name="vn2"></param>
-        /// <param name="pivotIndex"></param>
-        /// <param name="criteria"></param>
-        /// <returns></returns>
+        /// <param name="ipiv">Column pivot permutation.</param>
+        /// <param name="vn1">Working column norms used for pivot selection.</param>
+        /// <param name="vn2">Secondary norm estimates for stability checks.</param>
+        /// <param name="pivotIndex">Index of the current pivot position.</param>
+        /// <param name="criteria">Rank tolerance threshold below which the factorization stops.</param>
+        /// <returns>True when the current pivot norm is too small for a reliable rank.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool PivotAndCheckRankDeficient(int[] ipiv, double[] vn1, double[] vn2, int pivotIndex, double criteria)
         {
@@ -246,13 +255,15 @@ namespace LSQSolver
         }
 
         /// <summary>
-        /// Updating trailing column norm
+        /// Updates trailing column norms after a Householder reflection.
         /// </summary>
-        /// <param name="R"></param>
-        /// <param name="ipiv"></param>
-        /// <param name="pivot"></param>
-        /// <param name="vn1"></param>
-        /// <param name="vn2"></param>
+        /// <param name="arr">Dense matrix data in column-major order.</param>
+        /// <param name="rows">Matrix row count.</param>
+        /// <param name="cols">Matrix column count.</param>
+        /// <param name="ipiv">Current pivot permutation.</param>
+        /// <param name="pivot">Index of the current pivot column.</param>
+        /// <param name="vn1">Working column norms to update.</param>
+        /// <param name="vn2">Backup norms used when recomputing small values.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void UpdateTrailingColumnNorms(double[] arr, int rows, int cols, int[] ipiv, int pivot, double[] vn1, double[] vn2)
         {
@@ -293,14 +304,16 @@ namespace LSQSolver
 
 
         /// <summary>
-        /// Applies a Householder transformation to zero out subdiagonal elements of column pivot in A,
-        /// and simultaneously applies the same transformation to vector b.
+        /// Applies a Householder transformation to zero out subdiagonal elements of the current pivot column.
+        /// The same transformation is also applied to the right-hand side vector b.
         /// Both A and b are modified in-place.
         /// </summary>
-        /// <param name="A"></param>
-        /// <param name="b"></param>
-        /// <param name="ipiv"></param>
-        /// <param name="pivot"></param>
+        /// <param name="arr">Dense matrix data in column-major order.</param>
+        /// <param name="rows">Number of rows in the matrix.</param>
+        /// <param name="cols">Number of columns in the matrix.</param>
+        /// <param name="ipiv">Current column pivot permutation.</param>
+        /// <param name="pivot">Current pivot column index in pivot order.</param>
+        /// <param name="b">Right-hand side vector Q^T b to update.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ApplyHouseholderToColumn(double[] arr, int rows, int cols, int[] ipiv, int pivot, Span<double> b)
         {
@@ -390,13 +403,12 @@ namespace LSQSolver
 #region Backward substitution i.e. inv(R11) Q^t b
 
         /// <summary>
-        /// Backward substitution for the upper-triangular system R11 x1 = Q^T b.
+        /// Computes x1 by backward substitution for the upper-triangular system R11 x1 = Q^T b.
         /// </summary>
-        /// <param name="flatten_matrix"></param>
-        /// <param name="rows"></param>
-        /// <param name="Qtb"></param>
-        /// <param name="x"></param>
-        /// <param name="base_rank"></param>
+        /// <param name="flatten_matrix">Dense matrix data in column-major order containing the R factor.</param>
+        /// <param name="base_rank">Row offsets for the leading r pivot columns in pivoted storage.</param>
+        /// <param name="Qtb">The transformed right-hand side vector Q^T b.</param>
+        /// <param name="x">Output pivot-ordered solution vector.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void BackwardSubstitutionForRHS(double[] flatten_matrix, int[] base_rank, double[] Qtb, double[] x)
         {          
@@ -715,13 +727,15 @@ namespace LSQSolver
         }
 
         /// <summary>
-        /// Compute residual (||Ax - b|| = ||RPx - Qtb||)
+        /// Computes the residual norm ||Ax - b|| using the pivoted R factor and Q^T b.
         /// </summary>
-        /// <param name="R"></param>
-        /// <param name="Qtb"></param>
-        /// <param name="ipiv"></param>
-        /// <param name="perm_x"></param>
-        /// <returns></returns>
+        /// <param name="arr">Dense matrix data in column-major order containing the factorized R matrix.</param>
+        /// <param name="rows">Number of rows in the original matrix A.</param>
+        /// <param name="cols">Number of columns in the original matrix A.</param>
+        /// <param name="Qtb">The transformed right-hand side vector Q^T b.</param>
+        /// <param name="ipiv">Pivot permutation array mapping solution entries to original columns.</param>
+        /// <param name="perm_x">Solution vector in pivot order before unpivoting.</param>
+        /// <returns>The Euclidean norm of the residual vector.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static double GetResidualNorm(ReadOnlySpan<double> arr, int rows, int cols, ReadOnlySpan<double> Qtb, int[] ipiv, ReadOnlySpan<double> perm_x) // x before unpivot
         {
@@ -755,10 +769,10 @@ namespace LSQSolver
         /// <summary>
         /// Reverses the column pivoting applied to the solution vector.
         /// </summary>
-        /// <param name="cols"></param>
-        /// <param name="ipiv"></param>
-        /// <param name="x"></param>
-        /// <returns></returns>
+        /// <param name="cols">Number of columns in the original system.</param>
+        /// <param name="ipiv">Pivot permutation array used during QR factorization.</param>
+        /// <param name="x">Solution vector in pivot order.</param>
+        /// <returns>The solution vector in original column order.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static double[] UnpivotSolution(int cols, int[] ipiv, double[] x)
         {
@@ -976,10 +990,10 @@ namespace LSQSolver
         /// </summary>
         public int Cols { get; }
         /// <summary>
-        /// Constructor with memory allocation
+        /// Constructor with memory allocation.
         /// </summary>
-        /// <param name="rows"></param>
-        /// <param name="cols"></param>
+        /// <param name="rows">The number of rows for the matrix.</param>
+        /// <param name="cols">The number of columns for the matrix.</param>
         public MatrixObject(int rows, int cols)
         {
             Rows = rows;
@@ -987,9 +1001,9 @@ namespace LSQSolver
             array = new double[rows * cols];
         }
         /// <summary>
-        /// Copy constructor
+        /// Copy constructor.
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="other">The source matrix to clone.</param>
         public MatrixObject(MatrixObject other)
         {
             Rows = other.Rows;
@@ -997,9 +1011,10 @@ namespace LSQSolver
             array = (double[])other.array.Clone();
         }
         /// <summary>
-        /// Copy constructor with pivot
+        /// Copy constructor with a column pivot permutation.
         /// </summary>
-        /// <param name="other"></param>
+        /// <param name="other">The source matrix.</param>
+        /// <param name="pivot">Column pivot permutation to apply during copy.</param>
         public MatrixObject(MatrixObject other, int[] pivot)
         {
             Rows = other.Rows;
@@ -1015,10 +1030,10 @@ namespace LSQSolver
             }
         }
         /// <summary>
-        /// Constructor by jagged array
+        /// Constructor from jagged row arrays.
         /// </summary>
-        /// <param name="A"></param>
-        /// <exception cref="ArgumentException"></exception>
+        /// <param name="A">A non-null jagged array representing the matrix rows.</param>
+        /// <exception cref="ArgumentException">Thrown when the input array is null, empty, or has inconsistent row lengths.</exception>
         public MatrixObject(double[][] A)
         {
             if (A == null || A.Length == 0 || A[0] == null)
