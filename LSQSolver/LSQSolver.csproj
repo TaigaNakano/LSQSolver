@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PackageId>LSQSolver</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>nakanotaiga</Authors>
+    <Company>nakanotaiga</Company>
+    <Description>Fast and robust least-squares solver using column-pivoted QR decomposition for full-rank and rank-deficient problems.</Description>
+    <PackageTags>linear algebra;least squares;QR decomposition;numerical analysis;matrix</PackageTags>
+    <RepositoryUrl>https://github.com/your-org/LSQSolver</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/your-org/LSQSolver</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <TieredCompilationQuickJit>false</TieredCompilationQuickJit>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Program.cs" />
+  </ItemGroup>
+
+ 
+
+</Project>
