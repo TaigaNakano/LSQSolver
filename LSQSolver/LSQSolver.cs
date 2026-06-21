@@ -207,6 +207,19 @@ namespace LSQSolver
             });
         }
 
+        /// <summary>
+        /// Performs column-pivoted QR factorization on the input matrix.
+        /// The factorization updates the matrix in-place and computes the numerical rank.
+        /// </summary>
+        /// <param name="flatten_matrix">Dense matrix data in column-major order.</param>
+        /// <param name="rows">Number of rows in the matrix.</param>
+        /// <param name="cols">Number of columns in the matrix.</param>
+        /// <param name="ipiv">Current column pivot permutation, updated in-place.</param>
+        /// <param name="Qtb">Right-hand side vector Q^T b updated during factorization.</param>
+        /// <param name="vn1">Working column norms used for pivot selection.</param>
+        /// <param name="vn2">Secondary column norm estimates used for stability.</param>
+        /// <param name="rank_tol">Numerical rank threshold used for early termination.</param>
+        /// <param name="rankR">Output rank of the R factor.</param>
         private static void CPQR(double[] flatten_matrix, int rows, int cols, int[] ipiv, double[] Qtb, double[] vn1, double[] vn2, double rank_tol, out int rankR)
         {
             int available_rank = rows < cols ? rows : cols;
@@ -353,10 +366,7 @@ namespace LSQSolver
             arr[basev + pivot] = s * norm;
 
             // Apply to remaining columns.
-            // This is the dominant repeated kernel in QR.
-            // The trailing panel shrinks as pivot increases, so switch dynamically:
-            //   large trailing panel -> Parallel.For
-            //   small trailing panel -> sequential for-loop
+            // This is the dominant repeated kernel in QR.        
             ApplyHouseholderTrailingParallel(arr, rows, cols, ipiv, pivot, basev, tau);
 
             // Apply to b (sequential)
@@ -374,6 +384,16 @@ namespace LSQSolver
                 arr[basev + i] = 0.0;
         }
 
+        /// <summary>
+        /// Applies the Householder reflection to the trailing columns in parallel.
+        /// </summary>
+        /// <param name="arr">Dense matrix data in column-major order.</param>
+        /// <param name="rows">Number of rows in the matrix.</param>
+        /// <param name="cols">Number of columns in the matrix.</param>
+        /// <param name="ipiv">Current column pivot permutation.</param>
+        /// <param name="pivot">Index of the current pivot column.</param>
+        /// <param name="basev">Base offset of the pivot column in the packed storage.</param>
+        /// <param name="tau">Householder scalar factor.</param>
         private static void ApplyHouseholderTrailingParallel(
             double[] arr,
             int rows,
