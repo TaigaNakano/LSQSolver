@@ -5,4 +5,4 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage("Style", "IDE0301:コレクションの初期化を簡略化します", Justification = "<pending>", Scope = "member", Target = "~P:LSQSolver.LSQSolverResult.Qtb")]
+[assembly: SuppressMessage("Style", "IDE0301:コレクションの初期化を簡略化します", Justification = "<保留中>", Scope = "member", Target = "~P:LSQSolver.LSQSolverResult.Qtb")]
