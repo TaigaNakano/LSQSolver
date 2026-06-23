@@ -11,6 +11,8 @@
 
 SVDを使用せず、列ピボット付きQR分解（CPQR）に基づいて解を求めます。
 
+GitHub リポジトリ: <https://github.com/TaigaNakano/LSQSolver>
+
 ---
 
 ## 特徴

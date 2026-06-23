@@ -11,6 +11,8 @@ Supports:
 
 without SVD and without external dependencies.
 
+GitHub repository: <https://github.com/TaigaNakano/LSQSolver>
+
 ---
 
 ## Features
