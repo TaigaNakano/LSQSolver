@@ -49,6 +49,13 @@ dotnet add package LSQSolver
 
 ## Usage
 
+### Import module
+
+```csharp
+using LSQSolver;
+using static LSQSolver.LSQSolver;
+```
+
 ### Construct a matrix
 
 ```csharp
@@ -66,13 +73,13 @@ var A = new MatrixObject(data);
 
 ```csharp
 double[] b = { 7, 8, 9 };
-var result = LSQSolver.Solve(A, b);
+var result = Solve(A, b); // or LSQSolver.LSQSolver.Solve(A, b);
 ```
 
 ### Solve Method
 
 ```csharp
-var result = LSQSolver.Solve(
+var result = Solve(
     A,
     b,
     overwrite: true,

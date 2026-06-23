@@ -42,6 +42,13 @@ dotnet add package LSQSolver
 
 ## 使用方法
 
+### モジュールのインポート
+
+```csharp
+using LSQSolver;
+using static LSQSolver.LSQSolver;
+```
+
 ### 行列の作成
 
 ```csharp
@@ -59,13 +66,13 @@ var A = new MatrixObject(data);
 
 ```csharp
 double[] b = { 7, 8, 9 };
-var result = LSQSolver.Solve(A, b);
+var result = Solve(A, b); // or LSQSolver.LSQSolver.Solve(A, b);
 ```
 
 ### 解法 (Solve Method)
 
 ```csharp
-var result = LSQSolver.Solve(
+var result = Solve(
     A,
     b,
     overwrite: true,
