@@ -163,13 +163,13 @@ Topics:
 
 ### Examples
 
-`docs/polynomial-fit.md`
+[`docs/polynomial-fit.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/polynomial-fit.md)
 
 - Polynomial curve fitting
 - Vandermonde matrices
 - Practical fitting examples
 
-`docs/gravity-inversion.md`
+`gravity-inversion.md`
 
 - Gravity anomaly inversion
 - Underdetermined least-squares problems
@@ -179,29 +179,33 @@ Topics:
 
 Preliminary benchmark results are available in:
 
-docs/performance.md
+[`performance.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/performance.md)
 
 The benchmark compares LSQSolver with GNU Octave for dense square least-squares problems under both full-rank and rank-deficient conditions.
 
 The reported timings are medians of 10 runs and were measured on the following machine:
 
-| Item             | Value                                               |
-| ---------------- | --------------------------------------------------- |
-| Model            | MacBook Pro                                         |
-| Chip             | Apple M1 Pro                                        |
-| CPU Cores        | 8 total: 6 performance cores and 2 efficiency cores |
-| Memory           | 16 GB                                               |
+| Item | Value |
+|---|---|
+| Model | MacBook Pro |
+| Chip | Apple M1 Pro |
+| CPU Cores | 8 total: 6 performance cores and 2 efficiency cores |
+| Memory | 16 GB |
 
 In this benchmark, LSQSolver showed the following results:
 
-For full-rank dense matrices, LSQSolver was faster than Octave QR factorization for n >= 50.
-At n = 2000, LSQSolver took 1134.0 ms for the full-rank case, while Octave QR factorization took 1483.0 ms.
-For rank-deficient matrices, LSQSolver became faster than Octave QR factorization at larger sizes. At n = 2000, LSQSolver took 1701.6 ms, while Octave QR factorization took 2102.2 ms.
-Compared with Octave pinv, LSQSolver was significantly faster for large matrices. At n = 2000, LSQSolver was about 5.7x faster for the rank-deficient case and about 13.8x faster for the full-rank case.
+- For full-rank dense matrices, LSQSolver was faster than Octave QR factorization for `n >= 50`.
+- At `n = 2000`, LSQSolver took `1171.7 ms` for the full-rank case, while Octave QR factorization took `1483.0 ms`.
+- For rank-deficient matrices, LSQSolver became faster than Octave QR factorization at larger sizes. At `n = 2000`, LSQSolver took `1353.4 ms`, while Octave QR factorization took `2102.2 ms`.
+- Compared with Octave `pinv`, LSQSolver was significantly faster for large matrices. At `n = 2000`, LSQSolver was about `7.2x` faster for the rank-deficient case and about `13.3x` faster for the full-rank case.
 
 These results are preliminary and depend on hardware, runtime, compiler settings, BLAS/LAPACK configuration, and benchmark implementation details.
 
-Status: Work in progress.
+## Future Plans
+
+Future development will depend on user needs.
+
+Possible extensions include support for regularized least-squares problems, multiple right-hand sides, and weighted least-squares problems. These features may be considered when they can reduce user-side implementation errors, avoid unnecessary memory allocation, or provide algorithmic advantages inside the solver.
 
 ## License
 

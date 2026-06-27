@@ -144,7 +144,7 @@ Console.WriteLine(result.ResidualNorm);
 
 ### 理論解説
 
-`docs/theory.md`
+`theory.md`
 
 内容:
 
@@ -156,13 +156,13 @@ Console.WriteLine(result.ResidualNorm);
 
 ### 応用例
 
-`docs/polynomial-fit.md`
+[`polynomial-fit_jp.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/polynomial-fit_jp.md)
 
 - 多項式近似
 - Vandermonde行列
 - 実用的なフィッティング例
 
-`docs/gravity-inversion.md`
+`gravity-inversion.md`
 
 - 重力異常逆解析
 - 劣決定最小二乗問題
@@ -170,33 +170,35 @@ Console.WriteLine(result.ResidualNorm);
 
 ### 性能評価
 
-性能評価
-
 予備的なベンチマーク結果は以下にまとめています。
 
-docs/performance_jp.md
+[`performance_jp.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/performance_jp.md)
 
 このベンチマークでは、フルランクおよびランク落ちの密な正方最小二乗問題について、LSQSolver と GNU Octave を比較しています。
 
 掲載している時間は10回実行したときの中央値であり、以下の環境で測定しています。
 
-| 項目     | 値                        |
-| ------ | ------------------------ |
-| 機種名    | MacBook Pro              |
-| チップ    | Apple M1 Pro             |
+| 項目 | 値 |
+|---|---|
+| 機種名 | MacBook Pro |
+| チップ | Apple M1 Pro |
 | CPUコア数 | 合計8コア: パフォーマンスコア6、効率性コア2 |
-| メモリ    | 16 GB                    |
+| メモリ | 16 GB |
 
 今回の測定では、以下の結果が得られました。
 
-フルランクの密行列では、n >= 50 において LSQSolver は Octave の QR 分解より高速でした。
-n = 2000 のフルランクケースでは、LSQSolver が 1134.0 ms、Octave の QR 分解が 1483.0 ms でした。
-ランク落ち行列では、小さいサイズでは Octave の QR 分解が高速でしたが、大きいサイズでは LSQSolver が高速になりました。n = 2000 では、LSQSolver が 1701.6 ms、Octave の QR 分解が 2102.2 ms でした。
-Octave の pinv と比較すると、大きな行列では LSQSolver が大幅に高速でした。n = 2000 では、ランク落ちケースで約 5.7倍、フルランクケースで約 13.8倍 高速でした。
+- フルランクの密行列では、`n >= 50` において LSQSolver は Octave の QR 分解より高速でした。
+- `n = 2000` のフルランクケースでは、LSQSolver が `1171.7 ms`、Octave の QR 分解が `1483.0 ms` でした。
+- ランク落ち行列では、小さいサイズでは Octave の QR 分解が高速でしたが、大きいサイズでは LSQSolver が高速になりました。`n = 2000` では、LSQSolver が `1353.4 ms`、Octave の QR 分解が `2102.2 ms` でした。
+- Octave の `pinv` と比較すると、大きな行列では LSQSolver が大幅に高速でした。`n = 2000` では、ランク落ちケースで約 `7.2倍`、フルランクケースで約 `13.3倍` 高速でした。
 
 これらの結果は予備的なものであり、ハードウェア、実行環境、コンパイラ設定、BLAS/LAPACK の構成、およびベンチマーク実装に依存します。
 
-状況: 作成中
+## 今後の対応予定
+
+今後の開発は、ユーザーのニーズに応じて検討します。
+
+候補としては、正則化付き最小二乗問題、複数右辺ベクトル、重み付き最小二乗問題への対応などがあります。これらは、ユーザー側での実装ミスを減らせる場合、不要なメモリ確保を避けられる場合、またはソルバー内部でアルゴリズム上の利点がある場合に対応を検討します。
 
 ## ライセンス
 
