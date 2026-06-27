@@ -26,7 +26,7 @@ namespace LSQSolver
         /// If true, stores QR intermediates useful for follow-up computations: R, Q^T b, and pivot.
         /// </param>
         /// <returns>The computed least squares result. Check Status before using Solution.</returns>
-        public static LSQSolverResult Solve(MatrixObject A, double[] b, bool overwrite = true, bool store_intermediates = false, double rank_tolerance =  EPS, bool check_finite = true)
+        public static LSQSolverResult Solve(MatrixObject A, double[] b, bool overwrite = false, bool store_intermediates = false, double rank_tolerance =  EPS, bool check_finite = true)
         {
             // Design note:
             // This method intentionally keeps the main numerical workflow in one place.
@@ -611,7 +611,8 @@ namespace LSQSolver
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void BuildYtYPlusI(double[] arr, int r, int d, int[] base_free, double[] spd)
         {
-            for (int row = 0; row < d; row++)
+            //for (int row = 0; row < d; row++)
+            Parallel.For(0, d, row =>
             {
                 int baserow = base_free[row];
 
@@ -626,6 +627,7 @@ namespace LSQSolver
                     spd[PackedLowerIndex(row, col)] = sum;
                 }
             }
+            );
         }
 
         /// <summary>
@@ -636,6 +638,7 @@ namespace LSQSolver
         private static void BuildYYtPlusI(double[] arr, int r, int d, int[] base_free, double[] spd)
         {
             for (int row = 0; row < r; row++)
+            Parallel.For(0, r, row =>
             {
                 for (int col = 0; col <= row; col++)
                 {
@@ -647,6 +650,7 @@ namespace LSQSolver
                     spd[PackedLowerIndex(row, col)] = sum;
                 }
             }
+            );
         }
 
         /// <summary>
@@ -945,9 +949,6 @@ namespace LSQSolver
 
             ret += $"Residual norm:\n{ResidualNorm}\n\n";
 
-            ret += "Diagnostics:\n";
-            ret += "\n";
-
             return ret;
         }
     }
@@ -1034,10 +1035,7 @@ namespace LSQSolver
                     throw new ArgumentException("All rows in the A array must have the same length.");
 
                 for (int j = 0; j < Cols; j++)
-                {
-                    // 列優先の格納
                     array[i + Rows * j] = A[i][j];
-                }
             }
         }
         /// <summary>
