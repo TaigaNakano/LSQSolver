@@ -637,7 +637,7 @@ namespace LSQSolver
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void BuildYYtPlusI(double[] arr, int r, int d, int[] base_free, double[] spd)
         {
-            for (int row = 0; row < r; row++)
+            //for (int row = 0; row < r; row++)
             Parallel.For(0, r, row =>
             {
                 for (int col = 0; col <= row; col++)
