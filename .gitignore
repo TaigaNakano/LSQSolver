@@ -39,6 +39,10 @@ _ReSharper*/
 
 # VS Code
 .vscode/
+
+# gp file
+*.gp
+
 # Local-only directories
 Assets/
 BenchMark/
