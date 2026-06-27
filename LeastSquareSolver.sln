@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LSQSolver", "LSQSolver\LSQSolver.csproj", "{19066670-4C35-48A2-B9DA-2DA0FF30E453}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchTestRunner", "BenchTestRunner\BenchTestRunner.csproj", "{48064C5D-F9E9-488F-88D5-F6699568188A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
