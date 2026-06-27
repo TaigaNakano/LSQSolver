@@ -27,10 +27,10 @@ The benchmark was run on the following machine:
 
 ## LSQSolver
 
-| case      |      10 |      50 |     100 |      500 |     1000 |      2000 |
-| --------- | ------: | ------: | ------: | -------: | -------: | --------: |
-| rank_half | 10.4537 | 3.15045 | 6.41995 |   97.064 | 380.2049 | 1701.5698 |
-| full_rank |  0.1438 |  0.3684 | 1.05525 | 23.15535 | 153.6233 | 1134.0057 |
+| case      |       10 |     50 |    100 |      500 |     1000 |      2000 |
+| --------- | -------: | -----: | -----: | -------: | -------: | --------: |
+| rank_half | 11.2097  | 3.5472 | 6.9870 |  96.9781 | 338.5879 | 1353.3620 |
+| full_rank |  0.08455 | 0.4121 | 1.0912 |  23.0219 | 148.3778 | 1171.7226 |
 
 ## GNU Octave
 
@@ -49,22 +49,24 @@ The following table shows Octave solve timings for `backslash`, `pinv`, and QR f
 
 Since LSQSolver is based on column-pivoted QR decomposition, the closest Octave comparison is `qr_factor`.
 
-| case / solver                |      10 |      50 |     100 |      500 |     1000 |      2000 |
-| ---------------------------- | ------: | ------: | ------: | -------: | -------: | --------: |
-| rank_half / LSQSolver        | 10.4537 | 3.15045 | 6.41995 |   97.064 | 380.2049 | 1701.5698 |
-| rank_half / Octave qr_factor |     0.1 |     0.6 |     2.7 |     80.9 |    483.2 |    2102.2 |
-| full_rank / LSQSolver        |  0.1438 |  0.3684 | 1.05525 | 23.15535 | 153.6233 | 1134.0057 |
-| full_rank / Octave qr_factor |     0.0 |     0.5 |     2.2 |     67.8 |    258.1 |   1482.95 |
+| case / solver                |       10 |     50 |    100 |      500 |     1000 |      2000 |
+| ---------------------------- | -------: | -----: | -----: | -------: | -------: | --------: |
+| rank_half / LSQSolver        | 11.2097  | 3.5472 | 6.9870 |  96.9781 | 338.5879 | 1353.3620 |
+| rank_half / Octave qr_factor |  0.1     | 0.6    | 2.7    |  80.9    | 483.2    | 2102.2    |
+| full_rank / LSQSolver        |  0.08455 | 0.4121 | 1.0912 |  23.0219 | 148.3778 | 1171.7226 |
+| full_rank / Octave qr_factor |  0.0     | 0.5    | 2.2    |  67.8    | 258.1    | 1482.95   |
 
 ## Observations
 
-For very small matrices, overhead dominates the timing results. 
+For very small matrices, overhead dominates the timing results.
 
 For full-rank matrices, LSQSolver is faster than Octave QR factorization for `n >= 50` in this benchmark.
 
-For rank-deficient matrices, LSQSolver is slower than Octave QR factorization at smaller sizes, but becomes competitive for larger matrices. In this benchmark, LSQSolver is faster than Octave QR factorization for `n = 1000` and `n = 2000`.
+For rank-deficient matrices, LSQSolver is slower than Octave QR factorization at smaller sizes, but becomes faster for larger matrices. In this benchmark, LSQSolver is faster than Octave QR factorization for `n = 1000` and `n = 2000`.
 
-Compared with Octave `pinv`, LSQSolver is significantly faster for large matrices. This is expected because `pinv` is typically based on singular value decomposition, while LSQSolver avoids SVD and uses QR-based rank detection with Cholesky-based minimum-norm reconstruction.
+At `n = 2000`, LSQSolver took `1353.4 ms` for the rank-deficient case, while Octave QR factorization took `2102.2 ms`.
+
+Compared with Octave `pinv`, LSQSolver is significantly faster for large matrices. At `n = 2000`, LSQSolver is about `7.2x` faster for the rank-deficient case and about `13.3x` faster for the full-rank case.
 
 ## Notes
 
