@@ -318,7 +318,7 @@ The matrix $A$ is an $m \times (n+1)$ matrix. The number of rows $m$ corresponds
 
 ## Matrix shape and rank
 
-The nature of the problem can be organized by the shape and rank of the matrix $A$. Let $r = \operatorname{rank}(A)$ be the rank of $A$. Here, $r$ represents the number of independent pieces of information contained in the matrix $A$.
+The nature of the problem can be organized by the shape and rank of the matrix $A$. Let $r = \mbox{rank}(A)$ be the rank of $A$. Here, $r$ represents the number of independent pieces of information contained in the matrix $A$.
 
 | Situation             |   Example condition | Nature of the solution                  |
 | --------------------- | ------------------: | --------------------------------------- |

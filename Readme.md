@@ -151,7 +151,7 @@ The following documents are planned and will be added in future releases.
 
 ### Theory
 
-`docs/theory.md`
+[`theory.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/theory.md)
 
 Topics:
 
@@ -163,7 +163,7 @@ Topics:
 
 ### Examples
 
-[`docs/polynomial-fit.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/polynomial-fit.md)
+[`polynomial-fit.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/polynomial-fit.md)
 
 - Polynomial curve fitting
 - Vandermonde matrices

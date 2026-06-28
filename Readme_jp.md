@@ -144,7 +144,7 @@ Console.WriteLine(result.ResidualNorm);
 
 ### 理論解説
 
-`theory.md`
+[`theory_jp.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/theory_jp.md)
 
 内容:
 
