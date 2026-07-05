@@ -2,7 +2,7 @@ reset
 
 set terminal qt enhanced persist
 
-set terminal svg enhanced 
+set terminal svg enhanced background "#ffffff"
 
 set output "inversion.svg"
 
