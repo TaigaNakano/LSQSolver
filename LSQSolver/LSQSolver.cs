@@ -1,6 +1,7 @@
-﻿//using System;
+//using System;
 //using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace LSQSolver
 {
@@ -178,23 +179,26 @@ namespace LSQSolver
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void InitializeColumnNorms(double[] valarr, int rows, int cols,  int[] ipiv, double[] vn1, double[] vn2)
         {
-       
-
             Parallel.For(0, cols, pos =>
             {
-                int col = ipiv[pos];
+                ref double a0 = ref MemoryMarshal.GetArrayDataReference(valarr);
+                ref int p0 = ref MemoryMarshal.GetArrayDataReference(ipiv);
+                ref double vn10 = ref MemoryMarshal.GetArrayDataReference(vn1);
+                ref double vn20 = ref MemoryMarshal.GetArrayDataReference(vn2);
+
+                int col = Unsafe.Add(ref p0, pos);
                 int basec = col * rows;
 
                 double sum = 0.0;
                 for (int i = 0; i < rows; i++)
                 {
-                    double e = valarr[basec + i];
+                    double e = Unsafe.Add(ref a0, basec + i);
                     sum += e * e;
                 }
 
                 double norm = Math.Sqrt(sum);
-                vn1[pos] = norm;
-                vn2[pos] = norm;
+                Unsafe.Add(ref vn10, pos) = norm;
+                Unsafe.Add(ref vn20, pos) = norm;
             });
         }
 
@@ -256,37 +260,41 @@ namespace LSQSolver
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void UpdateTrailingColumnNorms(double[] arr, int rows, int cols, int[] ipiv, int pivot, double[] vn1, double[] vn2)
         {
- 
             const double TOL3Z = 0.001;
+
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+            ref int p0 = ref MemoryMarshal.GetArrayDataReference(ipiv);
+            ref double vn10 = ref MemoryMarshal.GetArrayDataReference(vn1);
+            ref double vn20 = ref MemoryMarshal.GetArrayDataReference(vn2);
 
             for (int pos = pivot + 1; pos < cols; pos++)
             {
-                double v = vn1[pos];
+                double v = Unsafe.Add(ref vn10, pos);
                 if (v <= EPS) continue;
 
-                int col = ipiv[pos];
+                int col = Unsafe.Add(ref p0, pos);
                 int basec = col * rows;
 
-                double r = Math.Abs(arr[basec + pivot]); // R[pivot, col] after update
+                double r = Math.Abs(Unsafe.Add(ref a0, basec + pivot)); // R[pivot, col] after update
 
                 double ratio = r / v;
                 double t = 1.0 - ratio * ratio;
                 if (t < 0.0) t = 0.0;
 
                 double newv = v * Math.Sqrt(t);
-                vn1[pos] = newv;
+                Unsafe.Add(ref vn10, pos) = newv;
 
-                if (newv <= TOL3Z * vn2[pos])
+                if (newv <= TOL3Z * Unsafe.Add(ref vn20, pos))
                 {
                     double s = 0.0;
                     for (int i = pivot + 1; i < rows; i++)
                     {
-                        double e = arr[basec + i];
+                        double e = Unsafe.Add(ref a0, basec + i);
                         s += e * e;
                     }
                     double exact = Math.Sqrt(s);
-                    vn1[pos] = exact;
-                    vn2[pos] = exact;
+                    Unsafe.Add(ref vn10, pos) = exact;
+                    Unsafe.Add(ref vn20, pos) = exact;
                 }
             }
         }
@@ -304,87 +312,164 @@ namespace LSQSolver
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ApplyHouseholderToColumn(double[] arr, int rows, int cols, int[] ipiv, int pivot, Span<double> b)
         {
-            int col = ipiv[pivot];
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+            ref int p0 = ref MemoryMarshal.GetArrayDataReference(ipiv);
+            ref double b0 = ref MemoryMarshal.GetReference(b);
+
+            int col = Unsafe.Add(ref p0, pivot);
             int basev = col * rows;
 
             // norm2 of A[pivot:, col]
             double norm2 = 0.0;
             for (int i = pivot; i < rows; i++)
             {
-                double e = arr[basev + i];
+                double e = Unsafe.Add(ref a0, basev + i);
                 norm2 += e * e;
             }
             if (norm2 <= EPS)
             {
                 // keep triangular shape
-                for (int i = pivot + 1; i < rows; i++) arr[basev + i] = 0.0;
+                for (int i = pivot + 1; i < rows; i++)
+                    Unsafe.Add(ref a0, basev + i) = 0.0;
                 return;
             }
 
             double norm = Math.Sqrt(norm2);
 
-            double a0 = arr[basev + pivot];
-            double s = a0 >= 0.0 ? -1.0 : 1.0;
-            double u1 = a0 - s * norm;
+            double a00 = Unsafe.Add(ref a0, basev + pivot);
+            double s = a00 >= 0.0 ? -1.0 : 1.0;
+            double u1 = a00 - s * norm;
             if (Math.Abs(u1) <= EPS)
             {
-                arr[basev + pivot] = s * norm;
-                for (int i = pivot + 1; i < rows; i++) arr[basev + i] = 0.0;
+                Unsafe.Add(ref a0, basev + pivot) = s * norm;
+                for (int i = pivot + 1; i < rows; i++)
+                    Unsafe.Add(ref a0, basev + i) = 0.0;
                 return;
             }
 
             double inv_u1 = 1.0 / u1;
-            for (int i = pivot + 1; i < rows; i++) arr[basev + i] *= inv_u1;
+            for (int i = pivot + 1; i < rows; i++)
+            {
+                ref double ai = ref Unsafe.Add(ref a0, basev + i);
+                ai *= inv_u1;
+            }
 
             double tau = -s * u1 / norm;
-            arr[basev + pivot] = s * norm;
+            Unsafe.Add(ref a0, basev + pivot) = s * norm;
 
             // Apply to remaining columns.
             // This is the dominant repeated kernel in QR.
-            // The trailing panel shrinks as pivot increases, so switch dynamically:
-            //   large trailing panel -> Parallel.For
-            //   small trailing panel -> sequential for-loop
             ApplyHouseholderTrailingParallel(arr, rows, cols, ipiv, pivot, basev, tau);
 
             // Apply to b (sequential)
-            double dotb = b[pivot];
+            double dotb = Unsafe.Add(ref b0, pivot);
             for (int i = pivot + 1; i < rows; i++)
-                dotb += arr[basev + i] * b[i];
+                dotb += Unsafe.Add(ref a0, basev + i) * Unsafe.Add(ref b0, i);
 
             double scale_b = tau * dotb;
-            b[pivot] -= scale_b;
+            Unsafe.Add(ref b0, pivot) -= scale_b;
             for (int i = pivot + 1; i < rows; i++)
-                b[i] -= scale_b * arr[basev + i];
+                Unsafe.Add(ref b0, i) -= scale_b * Unsafe.Add(ref a0, basev + i);
 
             // store only R: zero out below diagonal in pivot column
             for (int i = pivot + 1; i < rows; i++)
-                arr[basev + i] = 0.0;
+                Unsafe.Add(ref a0, basev + i) = 0.0;
         }
 
         private static void ApplyHouseholderTrailingParallel(
-            double[] arr,
-            int rows,
-            int cols,
-            int[] ipiv,
-            int pivot,
-            int basev,
-            double tau)
+        double[] arr,
+        int rows,
+        int cols,
+        int[] ipiv,
+        int pivot,
+        int basev,
+        double tau)
+    {
+        const int BlockSize = 4;
+
+        int firstCol = pivot + 1;
+        if (firstCol >= cols) return;
+
+        int blockCount = (cols - firstCol + BlockSize - 1) / BlockSize;
+
+        Parallel.For(0, blockCount, block =>
         {
-            Parallel.For(pivot + 1, cols, k =>
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+            ref int p0 = ref MemoryMarshal.GetArrayDataReference(ipiv);
+
+            int k0 = firstCol + block * BlockSize;
+            int remaining = cols - k0;
+
+            if (remaining >= 4)
             {
-                int basej = ipiv[k] * rows;
+                int base0 = Unsafe.Add(ref p0, k0) * rows;
+                int base1 = Unsafe.Add(ref p0, k0 + 1) * rows;
+                int base2 = Unsafe.Add(ref p0, k0 + 2) * rows;
+                int base3 = Unsafe.Add(ref p0, k0 + 3) * rows;
 
-                double dot = arr[basej + pivot];
+                double dot0 = Unsafe.Add(ref a0, base0 + pivot);
+                double dot1 = Unsafe.Add(ref a0, base1 + pivot);
+                double dot2 = Unsafe.Add(ref a0, base2 + pivot);
+                double dot3 = Unsafe.Add(ref a0, base3 + pivot);
+
                 for (int i = pivot + 1; i < rows; i++)
-                    dot += arr[basev + i] * arr[basej + i];
+                {
+                    double vi = Unsafe.Add(ref a0, basev + i);
 
-                double scale = tau * dot;
+                    dot0 += vi * Unsafe.Add(ref a0, base0 + i);
+                    dot1 += vi * Unsafe.Add(ref a0, base1 + i);
+                    dot2 += vi * Unsafe.Add(ref a0, base2 + i);
+                    dot3 += vi * Unsafe.Add(ref a0, base3 + i);
+                }
 
-                arr[basej + pivot] -= scale;
+                double scale0 = tau * dot0;
+                double scale1 = tau * dot1;
+                double scale2 = tau * dot2;
+                double scale3 = tau * dot3;
+
+                Unsafe.Add(ref a0, base0 + pivot) -= scale0;
+                Unsafe.Add(ref a0, base1 + pivot) -= scale1;
+                Unsafe.Add(ref a0, base2 + pivot) -= scale2;
+                Unsafe.Add(ref a0, base3 + pivot) -= scale3;
+
                 for (int i = pivot + 1; i < rows; i++)
-                    arr[basej + i] -= scale * arr[basev + i];
-            });
-        }
+                {
+                    double vi = Unsafe.Add(ref a0, basev + i);
+
+                    Unsafe.Add(ref a0, base0 + i) -= scale0 * vi;
+                    Unsafe.Add(ref a0, base1 + i) -= scale1 * vi;
+                    Unsafe.Add(ref a0, base2 + i) -= scale2 * vi;
+                    Unsafe.Add(ref a0, base3 + i) -= scale3 * vi;
+                }
+            }
+            else
+            {
+                // Tail: remaining = 1, 2, or 3
+                for (int k = k0; k < cols; k++)
+                {
+                    int basej = Unsafe.Add(ref p0, k) * rows;
+
+                    double dot = Unsafe.Add(ref a0, basej + pivot);
+
+                    for (int i = pivot + 1; i < rows; i++)
+                    {
+                        dot += Unsafe.Add(ref a0, basev + i)
+                            * Unsafe.Add(ref a0, basej + i);
+                    }
+
+                    double scale = tau * dot;
+
+                    Unsafe.Add(ref a0, basej + pivot) -= scale;
+
+                    for (int i = pivot + 1; i < rows; i++)
+                    {
+                        Unsafe.Add(ref a0, basej + i)
+                            -= scale * Unsafe.Add(ref a0, basev + i);
+                    }
+                }
+            }
+        });
+    }
 #endregion
 
 #region Backward substitution i.e. inv(R11) Q^t b
@@ -399,18 +484,22 @@ namespace LSQSolver
         /// <param name="base_rank"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void BackwardSubstitutionForRHS(double[] flatten_matrix, int[] base_rank, double[] Qtb, double[] x)
-        {          
+        {
             int r = base_rank.Length;
             Array.Copy(Qtb, x, r); // x1 = Q^T b (pivot order)
 
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(flatten_matrix);
+            ref int br0 = ref MemoryMarshal.GetArrayDataReference(base_rank);
+            ref double x0 = ref MemoryMarshal.GetArrayDataReference(x);
+
             for (int i = r - 1; i >= 0; i--)
             {
-                double sum = x[i];
+                double sum = Unsafe.Add(ref x0, i);
 
                 for (int j = i + 1; j < r; j++)
-                    sum -= flatten_matrix[base_rank[j] + i] * x[j];
+                    sum -= Unsafe.Add(ref a0, Unsafe.Add(ref br0, j) + i) * Unsafe.Add(ref x0, j);
 
-                x[i] = sum / flatten_matrix[base_rank[i] + i];
+                Unsafe.Add(ref x0, i) = sum / Unsafe.Add(ref a0, Unsafe.Add(ref br0, i) + i);
             }
         }
 #endregion
@@ -475,32 +564,96 @@ namespace LSQSolver
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void ComputeYInPlace(
-            double[] arr,
-            int rows,
-            int cols,
-            int r,
-            int[] pivot,
-            int[] base_rank)
-        {
+        double[] arr,
+        int rows,
+        int cols,
+        int r,
+        int[] pivot,
+        int[] base_rank)
+    {
+        const int BlockSize = 4;
 
-            Parallel.For(r, cols, k =>
+        if (r >= cols) return;
+
+        int blockCount = (cols - r + BlockSize - 1) / BlockSize;
+
+        Parallel.For(0, blockCount, block =>
+        {
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+            ref int p0 = ref MemoryMarshal.GetArrayDataReference(pivot);
+            ref int br0 = ref MemoryMarshal.GetArrayDataReference(base_rank);
+
+            int k0 = r + block * BlockSize;
+            int remaining = cols - k0;
+
+            if (remaining >= 4)
             {
-                int colk = pivot[k];
-                int basek = colk * rows;
+                int col0 = Unsafe.Add(ref p0, k0);
+                int col1 = Unsafe.Add(ref p0, k0 + 1);
+                int col2 = Unsafe.Add(ref p0, k0 + 2);
+                int col3 = Unsafe.Add(ref p0, k0 + 3);
+
+                int base0 = col0 * rows;
+                int base1 = col1 * rows;
+                int base2 = col2 * rows;
+                int base3 = col3 * rows;
 
                 for (int i = r - 1; i >= 0; i--)
                 {
-                    double v = arr[basek + i];
+                    double v0 = Unsafe.Add(ref a0, base0 + i);
+                    double v1 = Unsafe.Add(ref a0, base1 + i);
+                    double v2 = Unsafe.Add(ref a0, base2 + i);
+                    double v3 = Unsafe.Add(ref a0, base3 + i);
 
                     for (int j = i + 1; j < r; j++)
-                        v -= arr[base_rank[j] + i] * arr[basek + j];
+                    {
+                        int brj = Unsafe.Add(ref br0, j);
+                        double rij = Unsafe.Add(ref a0, brj + i);
 
-                    v /= arr[base_rank[i] + i];
-                    arr[basek + i] = v;
+                        v0 -= rij * Unsafe.Add(ref a0, base0 + j);
+                        v1 -= rij * Unsafe.Add(ref a0, base1 + j);
+                        v2 -= rij * Unsafe.Add(ref a0, base2 + j);
+                        v3 -= rij * Unsafe.Add(ref a0, base3 + j);
+                    }
+
+                    double invDiag = 1.0 / Unsafe.Add(ref a0, Unsafe.Add(ref br0, i) + i);
+
+                    v0 *= invDiag;
+                    v1 *= invDiag;
+                    v2 *= invDiag;
+                    v3 *= invDiag;
+
+                    Unsafe.Add(ref a0, base0 + i) = v0;
+                    Unsafe.Add(ref a0, base1 + i) = v1;
+                    Unsafe.Add(ref a0, base2 + i) = v2;
+                    Unsafe.Add(ref a0, base3 + i) = v3;
                 }
-            });
+            }
+            else
+            {
+                for (int k = k0; k < cols; k++)
+                {
+                    int colk = Unsafe.Add(ref p0, k);
+                    int basek = colk * rows;
 
-        }
+                    for (int i = r - 1; i >= 0; i--)
+                    {
+                        double v = Unsafe.Add(ref a0, basek + i);
+
+                        for (int j = i + 1; j < r; j++)
+                        {
+                            v -= Unsafe.Add(ref a0, Unsafe.Add(ref br0, j) + i)
+                            * Unsafe.Add(ref a0, basek + j);
+                        }
+
+                        v /= Unsafe.Add(ref a0, Unsafe.Add(ref br0, i) + i);
+                        Unsafe.Add(ref a0, basek + i) = v;
+                    }
+                }
+            }
+        });
+    }
+
 
         /// <summary>
         /// d <= r route.
@@ -520,16 +673,21 @@ namespace LSQSolver
 
             BuildYtYPlusI(arr, r, d, base_free, spd);
 
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+            ref int bf0 = ref MemoryMarshal.GetArrayDataReference(base_free);
+            ref double x0 = ref MemoryMarshal.GetArrayDataReference(x);
+            ref double rhs0 = ref MemoryMarshal.GetArrayDataReference(rhs);
+
             // rhs = Y^T x1
             for (int j = 0; j < d; j++)
             {
                 double sum = 0.0;
-                int basec = base_free[j];
+                int basec = Unsafe.Add(ref bf0, j);
 
                 for (int i = 0; i < r; i++)
-                    sum += arr[basec + i] * x[i];
+                    sum += Unsafe.Add(ref a0, basec + i) * Unsafe.Add(ref x0, i);
 
-                rhs[j] = sum;
+                Unsafe.Add(ref rhs0, j) = sum;
             }
 
             if (!CholeskyDecomposeLower(spd, d)) return false;
@@ -541,14 +699,14 @@ namespace LSQSolver
                 double dot = 0.0;
 
                 for (int j = 0; j < d; j++)
-                    dot += arr[base_free[j] + i] * rhs[j];
+                    dot += Unsafe.Add(ref a0, Unsafe.Add(ref bf0, j) + i) * Unsafe.Add(ref rhs0, j);
 
-                x[i] -= dot;
+                Unsafe.Add(ref x0, i) -= dot;
             }
 
             // x2 write-back.
             for (int j = 0; j < d; j++)
-                x[r + j] = rhs[j];
+                Unsafe.Add(ref x0, r + j) = Unsafe.Add(ref rhs0, j);
 
             return true;
         }
@@ -576,20 +734,25 @@ namespace LSQSolver
             if (!CholeskyDecomposeLower(spd, r)) return false;
             CholeskySolveLowerInPlace(spd, z, r); // z becomes (I + Y Y^T)^-1 x1
 
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+            ref int bf0 = ref MemoryMarshal.GetArrayDataReference(base_free);
+            ref double x0 = ref MemoryMarshal.GetArrayDataReference(x);
+            ref double z0 = ref MemoryMarshal.GetArrayDataReference(z);
+
             // x1 <- z
             for (int i = 0; i < r; i++)
-                x[i] = z[i];
+                Unsafe.Add(ref x0, i) = Unsafe.Add(ref z0, i);
 
             // x2 <- Y^T z
             for (int j = 0; j < d; j++)
             {
                 double sum = 0.0;
-                int basec = base_free[j];
+                int basec = Unsafe.Add(ref bf0, j);
 
                 for (int i = 0; i < r; i++)
-                    sum += arr[basec + i] * z[i];
+                    sum += Unsafe.Add(ref a0, basec + i) * Unsafe.Add(ref z0, i);
 
-                x[r + j] = sum;
+                Unsafe.Add(ref x0, r + j) = sum;
             }
 
             return true;
@@ -613,20 +776,23 @@ namespace LSQSolver
         {
             Parallel.For(0, d, row =>
             {
-                int baserow = base_free[row];
+                ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+                ref int bf0 = ref MemoryMarshal.GetArrayDataReference(base_free);
+                ref double spd0 = ref MemoryMarshal.GetArrayDataReference(spd);
+
+                int baserow = Unsafe.Add(ref bf0, row);
 
                 for (int col = 0; col <= row; col++)
                 {
-                    int basecol = base_free[col];
+                    int basecol = Unsafe.Add(ref bf0, col);
                     double sum = (row == col) ? 1.0 : 0.0;
 
                     for (int i = 0; i < r; i++)
-                        sum += arr[baserow + i] * arr[basecol + i];
+                        sum += Unsafe.Add(ref a0, baserow + i) * Unsafe.Add(ref a0, basecol + i);
 
-                    spd[PackedLowerIndex(row, col)] = sum;
+                    Unsafe.Add(ref spd0, PackedLowerIndex(row, col)) = sum;
                 }
-            }
-            );
+            });
         }
 
         /// <summary>
@@ -638,17 +804,23 @@ namespace LSQSolver
         {
             Parallel.For(0, r, row =>
             {
+                ref double a0 = ref MemoryMarshal.GetArrayDataReference(arr);
+                ref int bf0 = ref MemoryMarshal.GetArrayDataReference(base_free);
+                ref double spd0 = ref MemoryMarshal.GetArrayDataReference(spd);
+
                 for (int col = 0; col <= row; col++)
                 {
                     double sum = (row == col) ? 1.0 : 0.0;
 
                     for (int j = 0; j < d; j++)
-                        sum += arr[base_free[j] + row] * arr[base_free[j] + col];
+                    {
+                        int basej = Unsafe.Add(ref bf0, j);
+                        sum += Unsafe.Add(ref a0, basej + row) * Unsafe.Add(ref a0, basej + col);
+                    }
 
-                    spd[PackedLowerIndex(row, col)] = sum;
+                    Unsafe.Add(ref spd0, PackedLowerIndex(row, col)) = sum;
                 }
-            }
-            );
+            });
         }
 
         /// <summary>
@@ -657,28 +829,30 @@ namespace LSQSolver
         /// </summary>
         private static bool CholeskyDecomposeLower(double[] a, int n)
         {
+            ref double a0 = ref MemoryMarshal.GetArrayDataReference(a);
+
             for (int i = 0; i < n; i++)
             {
                 int rowiBase = i * (i + 1) / 2;
 
                 for (int j = 0; j <= i; j++)
                 {
-                    double sum = a[rowiBase + j];
+                    double sum = Unsafe.Add(ref a0, rowiBase + j);
                     int rowjBase = j * (j + 1) / 2;
 
                     for (int k = 0; k < j; k++)
-                        sum -= a[rowiBase + k] * a[rowjBase + k];
+                        sum -= Unsafe.Add(ref a0, rowiBase + k) * Unsafe.Add(ref a0, rowjBase + k);
 
                     if (i == j)
                     {
                         if (sum <= 0.0 || double.IsNaN(sum))
                             return false;
 
-                        a[rowiBase + j] = Math.Sqrt(sum);
+                        Unsafe.Add(ref a0, rowiBase + j) = Math.Sqrt(sum);
                     }
                     else
                     {
-                        a[rowiBase + j] = sum / a[rowjBase + j];
+                        Unsafe.Add(ref a0, rowiBase + j) = sum / Unsafe.Add(ref a0, rowjBase + j);
                     }
                 }
             }
@@ -692,27 +866,30 @@ namespace LSQSolver
         /// </summary>
         private static void CholeskySolveLowerInPlace(double[] lower, double[] b, int n)
         {
+            ref double l0 = ref MemoryMarshal.GetArrayDataReference(lower);
+            ref double b0 = ref MemoryMarshal.GetArrayDataReference(b);
+
             // Forward solve: L y = b.
             for (int i = 0; i < n; i++)
             {
-                double sum = b[i];
+                double sum = Unsafe.Add(ref b0, i);
                 int rowiBase = i * (i + 1) / 2;
 
                 for (int j = 0; j < i; j++)
-                    sum -= lower[rowiBase + j] * b[j];
+                    sum -= Unsafe.Add(ref l0, rowiBase + j) * Unsafe.Add(ref b0, j);
 
-                b[i] = sum / lower[rowiBase + i];
+                Unsafe.Add(ref b0, i) = sum / Unsafe.Add(ref l0, rowiBase + i);
             }
 
             // Backward solve: L^T x = y.
             for (int i = n - 1; i >= 0; i--)
             {
-                double sum = b[i];
+                double sum = Unsafe.Add(ref b0, i);
 
                 for (int j = i + 1; j < n; j++)
-                    sum -= lower[PackedLowerIndex(j, i)] * b[j];
+                    sum -= Unsafe.Add(ref l0, PackedLowerIndex(j, i)) * Unsafe.Add(ref b0, j);
 
-                b[i] = sum / lower[PackedLowerIndex(i, i)];
+                Unsafe.Add(ref b0, i) = sum / Unsafe.Add(ref l0, PackedLowerIndex(i, i));
             }
         }
 

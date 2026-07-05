@@ -1,5 +1,7 @@
 # LSQSolver
 
+[<u>日本語版</u>](https://github.com/TaigaNakano/LSQSolver/blob/main/Readme_jp.md)
+
 A lightweight least-squares solver for dense matrices in .NET.
 
 Supports:
@@ -99,50 +101,49 @@ var result = Solve(
 - `rank_tolerance`: Relative tolerance used for numerical rank detection.
 - `check_finite`: If `true`, checks whether `A` and `b` contain `NaN` or `Infinity`.
 
-### Return Value
+### Return value: LSQSolverResult
 
-`Solve()` returns an `LSQSolverResult`.
+`Solve()` returns an `LSQSolverResult` object.
 
-Check `result.Status` before using `result.Solution`.
+The result object contains the computed solution, solver status, basic diagnostics, and optional QR intermediate data.
+
+Before using `Solution`, check `Status`.
+
+| Property | Type | Description |
+| --- | --- | --- |
+| `Status` | `LSQSolverStatus` | Status code of the solve operation. Check this value before using `Solution`. |
+| `Solution` | `double[]` | Computed least-squares solution vector. For rank-deficient or underdetermined problems, this is the minimum-norm solution when the solve succeeds. |
+| `Rows` | `int` | Number of rows of the input matrix `A`. |
+| `Cols` | `int` | Number of columns of the input matrix `A`. |
+| `Rank` | `int` | Estimated numerical rank detected during the column-pivoted QR factorization. |
+| `ResidualNorm` | `double` | Euclidean norm of the residual, `\|\|Ax - b\|\|`. |
+| `R` | `MatrixObject?` | Upper-triangular factor obtained by column-pivoted QR factorization. Columns are stored in pivoted order. This is stored only when `store_intermediates` is `true`; otherwise it is `null`. |
+| `Qtb` | `double[]?` | Transformed right-hand side vector `Qᵀb`. This is stored only when `store_intermediates` is `true`; otherwise it is `null`. |
+| `Pivot` | `int[]?` | Column pivot information. `Pivot[j]` gives the original column index of the `j`-th pivoted column. This is stored only when `store_intermediates` is `true`; otherwise it is `null`. |
+| `Tag` | `object?` | Optional tag field reserved for additional metadata. |
+
+#### Public methods
+
+| Method | Description |
+| --- | --- |
+| `ToString(bool omit = false)` | Converts the result object to a readable string. If `omit` is `true`, long arrays and matrices are shortened for display. |
+
+#### Example
 
 ```csharp
-if (result.Status == LSQSolverStatus.Success)
-{
-    double[] x = result.Solution;
-}
-```
+var result = Solve(A, b, store_intermediates: true);
 
-### Check solver status
-
-```csharp
 if (result.Status != LSQSolverStatus.Success)
 {
     Console.WriteLine(result.Status);
     return;
 }
-```
 
-#### Status Codes
-
-Possible status values include:
-
-- `Success`
-- `NullMatrix`
-- `EmptyMatrix`
-- `NullVector`
-- `DimensionMismatch`
-- `InvalidMatrix`
-- `InvalidVector`
-- `CholeskyFailed`
-
-
-### Access the solution and diagnostics
-
-```csharp
 double[] x = result.Solution;
 
-Console.WriteLine(result.Rank);
-Console.WriteLine(result.ResidualNorm);
+Console.WriteLine($"Rank: {result.Rank}");
+Console.WriteLine($"Residual norm: {result.ResidualNorm}");
+Console.WriteLine(result.ToString(omit: true));
 ```
 
 ## Documentation
@@ -166,10 +167,9 @@ Topics:
 [`polynomial-fit.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/polynomial-fit.md)
 
 - Polynomial curve fitting
-- Vandermonde matrices
 - Practical fitting examples
 
-`gravity-inversion.md`
+[`gravity-inversion.md`](https://github.com/TaigaNakano/LSQSolver/blob/main/docs/gravity-inversion.md)
 
 - Gravity anomaly inversion
 - Underdetermined least-squares problems
@@ -194,10 +194,10 @@ The reported timings are medians of 10 runs and were measured on the following m
 
 In this benchmark, LSQSolver showed the following results:
 
-- For full-rank dense matrices, LSQSolver was faster than Octave QR factorization for `n >= 50`.
-- At `n = 2000`, LSQSolver took `1171.7 ms` for the full-rank case, while Octave QR factorization took `1483.0 ms`.
-- For rank-deficient matrices, LSQSolver became faster than Octave QR factorization at larger sizes. At `n = 2000`, LSQSolver took `1353.4 ms`, while Octave QR factorization took `2102.2 ms`.
-- Compared with Octave `pinv`, LSQSolver was significantly faster for large matrices. At `n = 2000`, LSQSolver was about `7.2x` faster for the rank-deficient case and about `13.3x` faster for the full-rank case.
+- For full-rank dense matrices, LSQSolver was faster than Octave QR factorization for `n >= 50` in this benchmark. 
+- At `n = 2000`, LSQSolver took `564.4 ms` for the full-rank case, while Octave QR factorization took `1483.0 ms`. 
+- For rank-deficient matrices, LSQSolver became faster than Octave QR factorization for larger sizes. At `n = 2000`, LSQSolver took `764.7 ms`, while Octave QR factorization took `2102.2 ms`. 
+- Compared with Octave `pinv`, LSQSolver was significantly faster for large matrices. At `n = 2000`, LSQSolver was about `12.8x` faster for the rank-deficient case and about `27.6x` faster for the full-rank case.
 
 These results are preliminary and depend on hardware, runtime, compiler settings, BLAS/LAPACK configuration, and benchmark implementation details.
 
