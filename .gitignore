@@ -48,3 +48,7 @@ Assets/
 BenchMark/
 BenchTestRunner/
 TestCases/
+docs/figs/gravity-inversion/Shallow/*.gp
+docs/figs/gravity-inversion/Deep/*.gp
+docs/figs/gravity-inversion/Shallow/Console
+docs/figs/gravity-inversion/Deep/Console
