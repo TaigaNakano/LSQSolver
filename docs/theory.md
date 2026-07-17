@@ -11,7 +11,7 @@ The problem solved by `LSQSolver` can be summarized according to the shape and r
 - **When $`A`$ is rank-deficient**: the residual-minimizing solution may not be unique. In this case, `LSQSolver` computes the solution satisfying
 
 ```math
-  \min_{x \in \operatorname*{argmin}_{z \in \mathbb{R}^n}\|Az-b\|} \|x\|.
+  \min_{x \in \mbox{argmin}_{z \in \mathbb{R}^n}\|Az-b\|} \|x\|.
   
 ```
 
@@ -122,7 +122,7 @@ Thus, the original problem is reduced to the problem $`R\hat{x}\simeq y`$ in the
 
 ## Case: $`m \geq n`$ and $`A`$ Has Full Column Rank
 
-In this case, $`\operatorname{rank}(A)=n`$. After CPQR, $`R`$ and $`y`$ can be partitioned as
+In this case, $`\mbox{rank}(A)=n`$. After CPQR, $`R`$ and $`y`$ can be partitioned as
 
 ```math
 R =
@@ -159,7 +159,7 @@ In the implementation, the inverse matrix is not formed explicitly. Instead, thi
 
 ## Case: $`m<n`$ and $`A`$ Has Full Row Rank
 
-In this case, $`\operatorname{rank}(A)=m`$. After CPQR, $`R`$ and the unknown vector are partitioned as
+In this case, $`\mbox{rank}(A)=m`$. After CPQR, $`R`$ and the unknown vector are partitioned as
 
 ```math
 R =
@@ -184,7 +184,7 @@ Since $`A`$ has full row rank, a solution exists for any $`y\in\mathbb{R}^m`$. H
 
 ## Case: $`A`$ Is Rank-Deficient
 
-In general, let the numerical rank be $`r=\operatorname{rank}(A)<\min\{m,n\}`$. After CPQR, $`R`$, $`\hat{x}`$, and $`y`$ are partitioned according to the rank $`r`$ as
+In general, let the numerical rank be $`r=\mbox{rank}(A)<\min\{m,n\}`$. After CPQR, $`R`$, $`\hat{x}`$, and $`y`$ are partitioned according to the rank $`r`$ as
 
 ```math
 R =

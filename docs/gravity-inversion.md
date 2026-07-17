@@ -136,8 +136,8 @@ Without appropriate prior information, an underdetermined inverse problem does n
 The example follows a simple synthetic inverse-problem workflow.
 
 1. Discretize the observation surface and the subsurface domain.
-2. Assemble the sensitivity matrix \(A\).
-3. Define a synthetic true density contrast model \(\rho_{\mathrm{true}}\).
+2. Assemble the sensitivity matrix $`A`$.
+3. Define a synthetic true density contrast model $`\rho_{\mathrm{true}}`$.
 4. Compute the corresponding gravity anomaly
 
 ```math
@@ -151,7 +151,7 @@ A\rho \approx g
 ```
 
 using LSQSolver.
-6. Compare the recovered minimum-norm model \(\rho_{\mathrm{est}}\) with the prescribed model \(\rho_{\mathrm{true}}\).
+6. Compare the recovered minimum-norm model $`\rho_{\mathrm{est}}`$ with the prescribed model $`\rho_{\mathrm{true}}`$.
 
 The important point is that the inverse step does not attempt to recover the original synthetic model directly.
 It computes the minimum-norm solution selected by the algebraic problem formulation.
@@ -193,7 +193,7 @@ For a noise-free synthetic example, the residual should be small:
 \|A\rho_{\mathrm{est}} - g\|_2 \approx 0.
 ```
 
-However, the recovered model \(\rho_{\mathrm{est}}\) does not necessarily match the prescribed model \(\rho_{\mathrm{true}}\).
+However, the recovered model $`\rho_{\mathrm{est}}`$ does not necessarily match the prescribed model $`\rho_{\mathrm{true}}`$.
 This is not a failure of the solver.
 It is a consequence of the non-uniqueness of the underdetermined inverse problem.
 
@@ -217,7 +217,7 @@ This illustrates the main message of this example:
 
 A compact result table may be included as follows.
 
-| Case | Rows | Cols | Rank | \(\|g\|_2\) |  \(\|\rho_{\mathrm{true}}\|_2\) | \(\|\rho_{\mathrm{est}}\|_2\) |
+| Case | Rows | Cols | Rank | $`\|g\|_2`$ |  $`\|\rho_{\mathrm{true}}\|_2`$ | $`\|\rho_{\mathrm{est}}\|_2`$ |
 |:-:|:--:|:--:|:--:|:--:|:--:|:--:|
 | shallow | 1024 | 4096 | 1024 | 5887 | 500 | 474.4 |
 | deep | 1024 | 4096 | 1024 | 1318 | 500 | 44.44 |
@@ -289,8 +289,8 @@ A common form is Tikhonov regularization:
 \right),
 ```
 
-where \(L\) represents the chosen prior model and \(\lambda\) controls its strength.
-For example, \(L=I\) penalizes large density contrasts, while a difference operator penalizes rough density models.
+where $`L`$ represents the chosen prior model and $`\lambda`$ controls its strength.
+For example, $`L=I`$ penalizes large density contrasts, while a difference operator penalizes rough density models.
 
 This can be written as an ordinary least-squares problem:
 
@@ -330,13 +330,13 @@ and solve
 ```
 
 The solver then treats this as a standard least-squares problem.
-The modeling choices are contained in \(L\) and \(\lambda\), not in the solver itself.
+The modeling choices are contained in $`L`$ and $`\lambda`$, not in the solver itself.
 
 A weighted minimum-norm formulation can be handled in the same spirit.
-If the desired criterion is \(\|W\rho\|_2\), set \(y=W\rho\), solve
+If the desired criterion is $`\|W\rho\|_2`$, set $`y=W\rho`$, solve
 
 ```math
 A W^{-1} y \approx g,
 ```
 
-and recover \(\rho=W^{-1}y\).
+and recover $`\rho=W^{-1}y`$.
