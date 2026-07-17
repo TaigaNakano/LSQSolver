@@ -263,7 +263,7 @@ However, when $`n-r`$ is large, solving this normal equation directly results in
 > ```math
 > (I_{n-r}+Y^TY)Y^T = Y^T(I_r+YY^T)
 > 
-```
+>```
 >
 > holds. Indeed, expanding the left-hand side gives $`Y^T+Y^TYY^T`$, which is equal to $`Y^T(I_r+YY^T)`$.
 
@@ -276,7 +276,7 @@ However, when $`n-r`$ is large, solving this normal equation directly results in
 > =
 > Y^T(I_r+YY^T)^{-1}.
 > 
-```
+>```
 >
 > Therefore, $`\hat{x}_2`$ can be expressed in either of the following forms.
 
