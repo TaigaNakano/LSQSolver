@@ -10,7 +10,7 @@ The problem solved by `LSQSolver` can be summarized according to the shape and r
 - **When $`m<n`$ and $`A`$ has full row rank**: this is an underdetermined problem. The equation $`Ax=b`$ generally has infinitely many solutions, and `LSQSolver` computes the minimum-norm solution satisfying $`\min \|x\| \ \mathrm{s.t.}\ Ax=b`$.
 - **When $`A`$ is rank-deficient**: the residual-minimizing solution may not be unique. In this case, `LSQSolver` computes the solution satisfying
 
-  ```math
+```math
   \min_{x \in \operatorname*{argmin}_{z \in \mathbb{R}^n}\|Az-b\|} \|x\|.
   
 ```
