@@ -23,39 +23,39 @@ Suppose the underground region is discretized into rectangular cells, or voxels.
 
 Let
 
-- $\rho_j$ : density contrast of voxel $j$
-- $g_i$ : gravity anomaly observed at observation point $i$
+- $`\rho_j`$ : density contrast of voxel $`j`$
+- $`g_i`$ : gravity anomaly observed at observation point $`i`$
 
 Collecting all observations gives the linear system
 
-$$
+```math
 A\rho = g,
-$$
+```
 
 where
 
-- $A$ : sensitivity matrix
-- $\rho$ : unknown density contrast vector
-- $g$ : observed gravity anomaly vector
+- $`A`$ : sensitivity matrix
+- $`\rho`$ : unknown density contrast vector
+- $`g`$ : observed gravity anomaly vector
 
 The sensitivity matrix describes how each voxel contributes to each gravity observation.
 
-In this document, $\rho$ should be interpreted as a **density contrast**, not necessarily the absolute rock density.
-For example, if the background density is $\rho_0$, then
+In this document, $`\rho`$ should be interpreted as a **density contrast**, not necessarily the absolute rock density.
+For example, if the background density is $`\rho_0`$, then
 
-$$
+```math
 \rho = \rho_{\mathrm{rock}} - \rho_0.
-$$
+```
 
-Typical density contrasts used in synthetic examples are on the order of $100$--$500\ \mathrm{kg/m^3}$.
+Typical density contrasts used in synthetic examples are on the order of $`100`$--$`500\ \mathrm{kg/m^3}`$.
 
 ---
 
 ## Sensitivity matrix
 
-For a point observation at $(x_i,y_i,z_i)$ and a voxel $V_j$, the vertical gravity contribution is modeled by
+For a point observation at $`(x_i,y_i,z_i)`$ and a voxel $`V_j`$, the vertical gravity contribution is modeled by
 
-$$
+```math
 A_{ij}
 =
 G
@@ -69,18 +69,18 @@ G
 (z_i-z)^2
 \right]^{3/2}}
 \,dV,
-$$
+```
 
 where
 
-- $G$ : gravitational constant
-- $(x_i,y_i,z_i)$ : observation point
-- $V_j$ : voxel corresponding to unknown $\rho_j$
+- $`G`$ : gravitational constant
+- $`(x_i,y_i,z_i)`$ : observation point
+- $`V_j`$ : voxel corresponding to unknown $`\rho_j`$
 
 This integral has a closed-form analytical solution for rectangular prisms.
 For a simple numerical example, it can also be approximated by evaluating the kernel at the voxel center and multiplying by the voxel volume:
 
-$$
+```math
 A_{ij}
 \approx
 G |V_j|
@@ -92,35 +92,35 @@ G |V_j|
 +
 (z_i-z_j)^2
 \right]^{3/2}},
-$$
+```
 
-where $(x_j,y_j,z_j)$ is the center of voxel $j$.
+where $`(x_j,y_j,z_j)`$ is the center of voxel $`j`$.
 
-Depending on implementation, the factor $G$ may be included either in the sensitivity matrix or applied later when converting the computed anomaly to physical units.
-For example, if the matrix is assembled without $G$, the synthetic anomaly can be converted to $\mathrm{m/s^2}$ by multiplying by $G$.
+Depending on implementation, the factor $`G`$ may be included either in the sensitivity matrix or applied later when converting the computed anomaly to physical units.
+For example, if the matrix is assembled without $`G`$, the synthetic anomaly can be converted to $`\mathrm{m/s^2}`$ by multiplying by $`G`$.
 To display the result in mGal, use
 
-$$
+```math
 1\ \mathrm{mGal} = 10^{-5}\ \mathrm{m/s^2}.
-$$
+```
 
 ---
 
 ## Why is the problem underdetermined?
 
 In a typical gravity inversion setup, the number of unknown density cells is larger than the number of observations.
-For example, a $32 \times 32$ observation grid and a $32 \times 32 \times 4$ subsurface mesh give
+For example, a $`32 \times 32`$ observation grid and a $`32 \times 32 \times 4`$ subsurface mesh give
 
-$$
+```math
 m = 1024,\qquad n = 4096,
-$$
+```
 
 so that
 
-$$
+```math
 A \in \mathbb{R}^{1024\times4096},
 \qquad m<n.
-$$
+```
 
 Therefore, many density models can reproduce the same gravity observations.
 LSQSolver gives one well-defined choice: the **minimum-norm solution**.
@@ -140,15 +140,15 @@ The example follows a simple synthetic inverse-problem workflow.
 3. Define a synthetic true density contrast model \(\rho_{\mathrm{true}}\).
 4. Compute the corresponding gravity anomaly
 
-$$
+```math
 g = A\rho_{\mathrm{true}}.
-$$
+```
 
 5. Solve the underdetermined inverse problem
 
-$$
+```math
 A\rho \approx g
-$$
+```
 
 using LSQSolver.
 6. Compare the recovered minimum-norm model \(\rho_{\mathrm{est}}\) with the prescribed model \(\rho_{\mathrm{true}}\).
@@ -168,9 +168,9 @@ They are designed to show that the minimum-norm solution is a well-defined algeb
 First, place a positive density contrast near the center of the subsurface domain and close to the observation surface.
 Then compute the gravity anomaly by
 
-$$
+```math
 g = A\rho_{\mathrm{true}}.
-$$
+```
 
 The gravity anomaly should have a smooth hotspot approximately above the density anomaly.
 This confirms that the mesh indexing, sign convention, observation position, and unit conversion are consistent.
@@ -189,9 +189,9 @@ LSQSolver selects the minimum-norm solution among them.
 
 For a noise-free synthetic example, the residual should be small:
 
-$$
+```math
 \|A\rho_{\mathrm{est}} - g\|_2 \approx 0.
-$$
+```
 
 However, the recovered model \(\rho_{\mathrm{est}}\) does not necessarily match the prescribed model \(\rho_{\mathrm{true}}\).
 This is not a failure of the solver.
@@ -266,9 +266,9 @@ If the plain minimum-norm assumption is not appropriate, that prior information 
 
 The same formulation is applicable to many inverse problems in science and engineering where the relationship between unknown parameters and observations can be expressed as
 
-$$
+```math
 A x \approx b.
-$$
+```
 
 ---
 
@@ -280,21 +280,21 @@ It is a way to express the user's prior information as part of the least-squares
 
 A common form is Tikhonov regularization:
 
-$$
+```math
 \min_{\rho}
 \left(
 \|A\rho-g\|_2^2
 +
 \lambda^2\|L\rho\|_2^2
 \right),
-$$
+```
 
 where \(L\) represents the chosen prior model and \(\lambda\) controls its strength.
 For example, \(L=I\) penalizes large density contrasts, while a difference operator penalizes rough density models.
 
 This can be written as an ordinary least-squares problem:
 
-$$
+```math
 \begin{bmatrix}
 A \\
 \lambda L
@@ -305,11 +305,11 @@ A \\
 g \\
 0
 \end{bmatrix}.
-$$
+```
 
 Thus, to use LSQSolver, define
 
-$$
+```math
 \widehat{A} =
 \begin{bmatrix}
 A \\
@@ -321,13 +321,13 @@ A \\
 g \\
 0
 \end{bmatrix},
-$$
+```
 
 and solve
 
-$$
+```math
 \widehat{A}\rho \approx \widehat{g}.
-$$
+```
 
 The solver then treats this as a standard least-squares problem.
 The modeling choices are contained in \(L\) and \(\lambda\), not in the solver itself.
@@ -335,8 +335,8 @@ The modeling choices are contained in \(L\) and \(\lambda\), not in the solver i
 A weighted minimum-norm formulation can be handled in the same spirit.
 If the desired criterion is \(\|W\rho\|_2\), set \(y=W\rho\), solve
 
-$$
+```math
 A W^{-1} y \approx g,
-$$
+```
 
 and recover \(\rho=W^{-1}y\).

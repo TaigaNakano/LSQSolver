@@ -19,7 +19,7 @@ Note that `LSQSolver` is not a library specialized for polynomial fitting. It is
 
 ## Formulating polynomial fitting
 
-Let us consider fitting a polynomial to data points. We write the data points as $(x_1, y_1), (x_2, y_2), \ldots, (x_m, y_m)$, where $m$ is the number of data points, $x_i$ is the horizontal coordinate of the $i$-th point, and $y_i$ is the vertical coordinate of the $i$-th point.
+Let us consider fitting a polynomial to data points. We write the data points as $`(x_1, y_1), (x_2, y_2), \ldots, (x_m, y_m)`$, where $`m`$ is the number of data points, $`x_i`$ is the horizontal coordinate of the $`i`$-th point, and $`y_i`$ is the vertical coordinate of the $`i`$-th point.
 
 For example, if we use a quadratic polynomial, it has the following form.
 
@@ -27,13 +27,13 @@ For example, if we use a quadratic polynomial, it has the following form.
 p(x) = c_0 + c_1 x + c_2 x^2.
 ```
 
-Here, $p(x)$ is the value of the curve at $x$, and $c_0, c_1, c_2$ are the coefficients that determine the shape of the polynomial. These coefficients are the unknowns we want to compute. Changing the coefficients changes the shape of the curve. In other words, polynomial fitting means choosing the shape of the curve so that it fits the given data points as well as possible.
+Here, $`p(x)`$ is the value of the curve at $`x`$, and $`c_0, c_1, c_2`$ are the coefficients that determine the shape of the polynomial. These coefficients are the unknowns we want to compute. Changing the coefficients changes the shape of the curve. In other words, polynomial fitting means choosing the shape of the curve so that it fits the given data points as well as possible.
 
 If the points are roughly aligned along a straight line, a linear polynomial may be enough. If the points follow a slightly curved trend, a quadratic or cubic polynomial may fit them more naturally.
 
 ![](./figs/polynomial_fit/degree1_vs_degree2.svg)
 
-The important point is that `LSQSolver` does not treat polynomials as a special object. If we regard the coefficients $c_0, c_1, c_2$ as unknowns, the problem can be written as a linear problem using a matrix and a vector. `LSQSolver` solves that linear problem and returns the coefficients.
+The important point is that `LSQSolver` does not treat polynomials as a special object. If we regard the coefficients $`c_0, c_1, c_2`$ as unknowns, the problem can be written as a linear problem using a matrix and a vector. `LSQSolver` solves that linear problem and returns the coefficients.
 
 In C#, we first build the matrix `A` corresponding to the polynomial coefficients, and then pass it to `LSQSolver.Solve()`. For a quadratic polynomial, the computation can be written as follows.
 
@@ -66,7 +66,7 @@ p(x) = 1.0399999999999996 + 0.890000000000001 x + 0.04999999999999968 x^2
 residual = 0.17888543819998348
 ```
 
-In this code, `xs` stores the horizontal coordinates and `ys` stores the vertical coordinates. The array `result.Solution` contains the polynomial coefficients $c_0, c_1, c_2$.
+In this code, `xs` stores the horizontal coordinates and `ys` stores the vertical coordinates. The array `result.Solution` contains the polynomial coefficients $`c_0, c_1, c_2`$.
 
 Depending on the number of points, the degree of the polynomial, and possible duplication in the data, the following situations can occur.
 
@@ -265,13 +265,13 @@ At this point, the basic idea of using `LSQSolver` for polynomial fitting has be
 
 From here, we describe why polynomial fitting can be solved by `LSQSolver` using linear algebra. The previous sections already explain the basic usage. The following sections are supplementary material for readers who want to understand more precisely what kind of solution `LSQSolver` returns.
 
-Let the data points be $(x_1, y_1), (x_2, y_2), \ldots, (x_m, y_m)$, and let the degree-$n$ polynomial be
+Let the data points be $`(x_1, y_1), (x_2, y_2), \ldots, (x_m, y_m)`$, and let the degree-$`n`$ polynomial be
 
 ```math
 p(x) = c_0 + c_1 x + c_2 x^2 + \cdots + c_n x^n.
 ```
 
-Here, $m$ is the number of data points, $n$ is the degree of the polynomial, and $c_0, c_1, \ldots, c_n$ are the coefficients to be computed. The number of coefficients is $n+1$. For each data point, we want the following relation to hold approximately.
+Here, $`m`$ is the number of data points, $`n`$ is the degree of the polynomial, and $`c_0, c_1, \ldots, c_n`$ are the coefficients to be computed. The number of coefficients is $`n+1`$. For each data point, we want the following relation to hold approximately.
 
 ```math
 p(x_i) \approx y_i
@@ -284,7 +284,7 @@ This can be written in matrix form as
 A\mathbf{c} \approx \mathbf{y}.
 ```
 
-Here, $A$, $\mathbf{c}$, and $\mathbf{y}$ are defined as follows.
+Here, $`A`$, $`\mathbf{c}`$, and $`\mathbf{y}`$ are defined as follows.
 
 ```math
 A =
@@ -312,20 +312,20 @@ y_m
 \end{bmatrix}.
 ```
 
-The matrix $A$ is an $m \times (n+1)$ matrix. The number of rows $m$ corresponds to the number of data points, and the number of columns $n+1$ corresponds to the number of polynomial coefficients. In this way, polynomial fitting becomes a linear algebra problem for computing the coefficient vector $\mathbf{c}$.
+The matrix $`A`$ is an $`m \times (n+1)`$ matrix. The number of rows $`m`$ corresponds to the number of data points, and the number of columns $`n+1`$ corresponds to the number of polynomial coefficients. In this way, polynomial fitting becomes a linear algebra problem for computing the coefficient vector $`\mathbf{c}`$.
 
 ---
 
 ## Matrix shape and rank
 
-The nature of the problem can be organized by the shape and rank of the matrix $A$. Let $r = \mbox{rank}(A)$ be the rank of $A$. Here, $r$ represents the number of independent pieces of information contained in the matrix $A$.
+The nature of the problem can be organized by the shape and rank of the matrix $`A`$. Let $`r = \mbox{rank}(A)`$ be the rank of $`A`$. Here, $`r`$ represents the number of independent pieces of information contained in the matrix $`A`$.
 
 | Situation             |   Example condition | Nature of the solution                  |
 | --------------------- | ------------------: | --------------------------------------- |
-| Exactly determined    | $m = n+1,\ r = n+1$ | Unique solution                         |
-| Too many points       |           $m > n+1$ | In general, cannot be satisfied exactly |
-| Too many coefficients |           $m < n+1$ | In general, the solution is not unique  |
-| Rank deficient        |   $r < \min(m,n+1)$ | Independent information is missing      |
+| Exactly determined    | $`m = n+1,\ r = n+1`$ | Unique solution                         |
+| Too many points       |           $`m > n+1`$ | In general, cannot be satisfied exactly |
+| Too many coefficients |           $`m < n+1`$ | In general, the solution is not unique  |
+| Rank deficient        |   $`r < \min(m,n+1)`$ | Independent information is missing      |
 
 `LSQSolver` estimates the numerical rank. Therefore, it considers not only the apparent matrix size, but also how much independent information is actually contained in the matrix.
 
@@ -333,7 +333,7 @@ The nature of the problem can be organized by the shape and rank of the matrix $
 
 ## Least-squares solution
 
-Consider the case where the number of data points is larger than the number of coefficients, that is, $m > n+1$. In this case, the equation $A\mathbf{c} = \mathbf{y}$ generally cannot be satisfied exactly. In terms of polynomial fitting, this means that there is no curve of the chosen degree that passes through all data points exactly. Instead of requiring exact agreement, we choose the coefficient vector $\mathbf{c}$ that makes the residual $A\mathbf{c} - \mathbf{y}$ as small as possible.
+Consider the case where the number of data points is larger than the number of coefficients, that is, $`m > n+1`$. In this case, the equation $`A\mathbf{c} = \mathbf{y}`$ generally cannot be satisfied exactly. In terms of polynomial fitting, this means that there is no curve of the chosen degree that passes through all data points exactly. Instead of requiring exact agreement, we choose the coefficient vector $`\mathbf{c}`$ that makes the residual $`A\mathbf{c} - \mathbf{y}`$ as small as possible.
 
 Such a solution is called a **least-squares solution**. It is the solution of the following minimization problem.
 
@@ -341,7 +341,7 @@ Such a solution is called a **least-squares solution**. It is the solution of th
 \min_{\mathbf{c}} \|A\mathbf{c} - \mathbf{y}\|_2.
 ```
 
-Here, $A\mathbf{c} - \mathbf{y}$ is the residual vector, and $\|A\mathbf{c} - \mathbf{y}\|_2$ is the size of the residual. The notation $|\cdot|_2$ denotes the Euclidean norm, which is the square root of the sum of squares of the components. In the context of polynomial fitting, this means choosing a curve that fits the data well overall, even when it cannot pass through all points exactly.
+Here, $`A\mathbf{c} - \mathbf{y}`$ is the residual vector, and $`\|A\mathbf{c} - \mathbf{y}\|_2`$ is the size of the residual. The notation $`|\cdot|_2`$ denotes the Euclidean norm, which is the square root of the sum of squares of the components. In the context of polynomial fitting, this means choosing a curve that fits the data well overall, even when it cannot pass through all points exactly.
 
 The phrase “a curve that fits well overall” used earlier corresponds to this least-squares solution. In the earlier example with too many points, a single line cannot pass through all four data points exactly. Therefore, `LSQSolver` returns coefficients that make the residual small.
 
@@ -349,9 +349,9 @@ The phrase “a curve that fits well overall” used earlier corresponds to this
 
 ## Minimum-norm solution
 
-On the other hand, consider the case where the number of coefficients is larger than the number of conditions, that is, $m < n+1$. In this case, there may be multiple vectors $\mathbf{c}$ satisfying $A\mathbf{c} = \mathbf{y}$. In other words, multiple polynomials may explain the same data points. We then need a criterion for choosing one solution.
+On the other hand, consider the case where the number of coefficients is larger than the number of conditions, that is, $`m < n+1`$. In this case, there may be multiple vectors $`\mathbf{c}`$ satisfying $`A\mathbf{c} = \mathbf{y}`$. In other words, multiple polynomials may explain the same data points. We then need a criterion for choosing one solution.
 
-In such a case, `LSQSolver` returns a **minimum-norm solution**. A minimum-norm solution is the solution whose coefficient vector has the smallest size $\|\mathbf{c}\|_2$ among all solutions satisfying the conditions. It can be written as the following constrained minimization problem.
+In such a case, `LSQSolver` returns a **minimum-norm solution**. A minimum-norm solution is the solution whose coefficient vector has the smallest size $`\|\mathbf{c}\|_2`$ among all solutions satisfying the conditions. It can be written as the following constrained minimization problem.
 
 ```math
 \min_{\mathbf{c}} \|\mathbf{c}\|_2
@@ -361,7 +361,7 @@ In such a case, `LSQSolver` returns a **minimum-norm solution**. A minimum-norm 
 A\mathbf{c} = \mathbf{y}.
 ```
 
-The phrase “a natural curve” used earlier corresponds to this minimum-norm solution. Here, “natural” is not determined only by the visual appearance of the curve. It is defined by the linear-algebraic criterion that the coefficient vector has the smallest norm $\|\mathbf{c}\|_2$.
+The phrase “a natural curve” used earlier corresponds to this minimum-norm solution. Here, “natural” is not determined only by the visual appearance of the curve. It is defined by the linear-algebraic criterion that the coefficient vector has the smallest norm $`\|\mathbf{c}\|_2`$.
 
 For example, there are infinitely many cubic curves passing through two points. Among them, `LSQSolver` chooses a solution that satisfies the given conditions while avoiding unnecessarily large coefficients. In this sense, the earlier phrase “a manageable solution” corresponds to the minimum-norm solution.
 
@@ -371,14 +371,14 @@ However, “a natural curve” does not necessarily mean the visually smoothest 
 
 ## Situation 4: The rank drops
 
-In polynomial fitting, the rank may drop. For example, this can happen when the same $x$ value appears more than once.
+In polynomial fitting, the rank may drop. For example, this can happen when the same $`x`$ value appears more than once.
 
 ```text
 x: 0, 0, 1
 y: 1, 1, 2
 ```
 
-Even if we try to fit a quadratic polynomial, the first and second data points represent the same condition. In this case, the matrix $A$ becomes
+Even if we try to fit a quadratic polynomial, the first and second data points represent the same condition. In this case, the matrix $`A`$ becomes
 
 ```math
 A =
@@ -397,14 +397,14 @@ A =
 
 The first and second rows are identical, so there are only two linearly independent row vectors. In this document, we say that the rank drops when the number of independent conditions is smaller than the apparent number of conditions.
 
-Next, consider the case where slightly different $y$ values are given for the same $x$ value.
+Next, consider the case where slightly different $`y`$ values are given for the same $`x`$ value.
 
 ```text
 x: 0, 0, 1
 y: 1, 1.25, 2
 ```
 
-In this case, two values, $y=1$ and $y=1.25$, are given at $x=0$. Therefore, no single polynomial can satisfy both conditions exactly. Let us compute this case using `LSQSolver`.
+In this case, two values, $`y=1`$ and $`y=1.25`$, are given at $`x=0`$. Therefore, no single polynomial can satisfy both conditions exactly. Let us compute this case using `LSQSolver`.
 
 ```csharp
 double[] xs = { 0.0, 0.0, 1.0 };
@@ -442,7 +442,7 @@ In this case, the matrix size appears to indicate three conditions. However, the
 
 When the rank drops, the three situations described earlier may no longer be cleanly separated. Since independent information is missing, the solution may fail to be unique. In such a case, `LSQSolver` returns a minimum-norm solution, choosing the candidate whose coefficient vector has the smallest norm.
 
-On the other hand, if the conditions are inconsistent, as in the case where different $y$ values are given for the same $x$, no curve can pass through all points exactly. In that case, `LSQSolver` first finds a curve that makes the residual small, that is, a least-squares solution that fits the data well overall. If multiple such solutions exist, it then chooses the minimum-norm solution among them.
+On the other hand, if the conditions are inconsistent, as in the case where different $`y`$ values are given for the same $`x`$, no curve can pass through all points exactly. In that case, `LSQSolver` first finds a curve that makes the residual small, that is, a least-squares solution that fits the data well overall. If multiple such solutions exist, it then chooses the minimum-norm solution among them.
 
 ---
 
@@ -454,7 +454,7 @@ Polynomial fitting looks like the problem of fitting a curve to points. However,
 A\mathbf{c} \approx \mathbf{y}
 ```
 
-Here, $A$ is the matrix built from the $x$ values of the data points, $\mathbf{c}$ is the vector of polynomial coefficients, and $\mathbf{y}$ is the vector of the $y$ values.
+Here, $`A`$ is the matrix built from the $`x`$ values of the data points, $`\mathbf{c}`$ is the vector of polynomial coefficients, and $`\mathbf{y}`$ is the vector of the $`y`$ values.
 
 Depending on the number of points, the degree of the polynomial, and duplication in the data, the problem may fall into one of the following situations. The polynomial passing through the given points may be
 
